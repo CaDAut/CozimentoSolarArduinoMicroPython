@@ -1,4 +1,6 @@
 #Essa porção do código calcula a posição do sol em relação à cidade de Belo Horizonte - MG em um determidado momento.
+#Esse arquivo solcita ao usuário que ele entre com a data para o cálculo da posição sol.
+#Haverá uma versão em MicroPython deste mesmo código.
 
 import ephem
 
@@ -11,7 +13,9 @@ latitude = dms_to_radians(-19, -48, -57)
 longitude = dms_to_radians(-43, -57, -15)
 
 # Data e hora específica
-date = '2023/06/11 12:00:00'  # Exemplo: Ano/Mês/Dia Hora:Minuto:Segundo
+#(date = '2023/06/11 12:00:00'  # Exemplo: Ano/Mês/Dia Hora:Minuto:Segundo)
+print("Informe a data com o seguinte formato: Ano/Mês/Dia Hora:Minuto:Segundo")
+date = input()#'2023/06/11 12:00:00')
 
 # Criar um objeto Observer para as coordenadas fornecidas
 observer = ephem.Observer()
