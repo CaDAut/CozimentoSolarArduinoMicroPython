@@ -1,4 +1,5 @@
-#Essa porção do código calcula a posição do sol em relação à cidade de Belo Horizonte - MG em um determidado momento.
+#Esse script python calcula a posição do sol em relação a cidade de Belo Horizonte - MG 
+#(latitude = (-19, -48, -57) - longitude = (-43, -57, -15)) em um determidado momento.
 #Esse arquivo solcita ao usuário que ele entre com a data para o cálculo da posição sol.
 #Haverá uma versão em MicroPython deste mesmo código.
 
