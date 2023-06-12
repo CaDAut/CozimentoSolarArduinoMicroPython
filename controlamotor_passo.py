@@ -119,32 +119,32 @@ A biblioteca AccelStepper oferece diferentes modos de operação para controlar 
 motores de passo, como "passo total" (full step), "meio passo" (half step) e 
 "passo de micro" (microstepping). Ela também suporta aceleração e desaceleração suave 
 dos motores, o que é importante para evitar chocar os motores em altas 
-velocidades e obter um movimento mais preciso.
+velocidades e obter um movimento mais preciso."""
 
-Alguns conceitos importantes e funções-chave da biblioteca AccelStepper:
+#Alguns conceitos importantes e funções-chave da biblioteca AccelStepper:
 
-Passos e velocidade: A biblioteca trabalha com base em passos. 
+"""Passos e velocidade: A biblioteca trabalha com base em passos. 
 Cada motor de passo tem uma certa resolução, o que significa que ele se move em 
 incrementos discretos. Por exemplo, se um motor de passo tem uma resolução de 200 passos por 
 rotação completa, ele se moverá 1/200 de volta em cada passo. 
-A velocidade é especificada em passos por segundo ou passos por minuto.
+A velocidade é especificada em passos por segundo ou passos por minuto."""
 
-Aceleração: A biblioteca permite definir uma aceleração, ou seja, a taxa de mudança da 
+"""Aceleração: A biblioteca permite definir uma aceleração, ou seja, a taxa de mudança da 
 velocidade. Isso permite que o motor de passo atinja a velocidade desejada gradualmente, 
 evitando chocá-lo com aceleração instantânea. A aceleração é especificada em passos por 
-segundo ao quadrado ou passos por minuto ao quadrado.
+segundo ao quadrado ou passos por minuto ao quadrado."""
 
-Métodos principais: A AccelStepper oferece métodos principais para controlar os motores 
+"""Métodos principais: A AccelStepper oferece métodos principais para controlar os motores 
 de passo, como moveTo(), move(), run(), setSpeed(), setMaxSpeed(), setAcceleration(), 
 isRunning(), entre outros. Esses métodos são usados para definir a posição de destino, 
-mover o motor, atualizar o movimento e configurar a velocidade e aceleração.
+mover o motor, atualizar o movimento e configurar a velocidade e aceleração."""
 
-Modos de operação: A biblioteca AccelStepper suporta diferentes modos de operação, 
+"""Modos de operação: A biblioteca AccelStepper suporta diferentes modos de operação, 
 como "passo total" (onde o motor é controlado por sinais de pulso e direção), 
 "meio passo" (onde o motor pode se mover em incrementos menores do que um passo completo) 
-e "passo de micro" (que permite ainda mais microstepping, proporcionando movimentos mais suaves).
+e "passo de micro" (que permite ainda mais microstepping, proporcionando movimentos mais suaves)."""
 
-Esses são apenas alguns conceitos e funcionalidades básicas da biblioteca AccelStepper. 
+"""Esses são apenas alguns conceitos e funcionalidades básicas da biblioteca AccelStepper. 
 Ela oferece muitas outras opções de configuração e controle avançado de motores de passo. 
 Se você precisar de informações mais detalhadas sobre a biblioteca, 
 sugiro consultar a documentação oficial da AccelStepper."""
