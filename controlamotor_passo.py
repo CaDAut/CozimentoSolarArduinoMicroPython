@@ -1,3 +1,4 @@
+# Este código foi escrito para ESP32
 
 #include <WiFi.h>
 #include <WiFiClient.h>
