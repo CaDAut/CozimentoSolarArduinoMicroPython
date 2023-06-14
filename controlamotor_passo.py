@@ -1,151 +1,95 @@
-# Este código foi escrito para ESP32
+import machine
+from machine import Pin
+from machine import Timer
+from network import WLAN
+from umqtt.simple import MQTTClient
+from ujson import loads
 
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <AccelStepper.h>
+# Configurações da rede Wi-Fi
+WIFI_SSID = 'NOME_DA_REDE_WIFI'
+WIFI_PASSWORD = 'SENHA_DA_REDE_WIFI'
 
-const char* ssid = "NOME_DA_SUA_REDE_WIFI";
-const char* password = "SENHA_DA_SUA_REDE_WIFI";
+# Configurações dos motores de passo
+MOTOR1_STEP_PIN = 26
+MOTOR1_DIR_PIN = 27
+MOTOR2_STEP_PIN = 32
+MOTOR2_DIR_PIN = 33
+MOTOR3_STEP_PIN = 34
+MOTOR3_DIR_PIN = 35
+MOTOR4_STEP_PIN = 36
+MOTOR4_DIR_PIN = 39
 
-WebServer server(80);
+# Configuração do MQTT
+MQTT_SERVER = 'IP_DO_SERVIDOR_MQTT'
+MQTT_PORT = 1883
+MQTT_TOPIC = 'COORDENADAS_TOPIC'
 
-#Configurações dos motores de passo
-#define MOTOR1_STEP_PIN 26
-#define MOTOR1_DIR_PIN 27
-#define MOTOR2_STEP_PIN 32
-#define MOTOR2_DIR_PIN 33
-#define MOTOR3_STEP_PIN 34
-#define MOTOR3_DIR_PIN 35
-#define MOTOR4_STEP_PIN 36
-#define MOTOR4_DIR_PIN 39
+# Inicialização do Wi-Fi
+wlan = WLAN(mode=WLAN.STA)
+wlan.connect(ssid=WIFI_SSID, auth=(WIFI_SSID, WIFI_PASSWORD))
+while not wlan.isconnected():
+    machine.idle()
 
-AccelStepper motor1(AccelStepper::DRIVER, MOTOR1_STEP_PIN, MOTOR1_DIR_PIN);
-AccelStepper motor2(AccelStepper::DRIVER, MOTOR2_STEP_PIN, MOTOR2_DIR_PIN);
-AccelStepper motor3(AccelStepper::DRIVER, MOTOR3_STEP_PIN, MOTOR3_DIR_PIN);
-AccelStepper motor4(AccelStepper::DRIVER, MOTOR4_STEP_PIN, MOTOR4_DIR_PIN);
+# Inicialização dos motores de passo
+motor1 = machine.Pin(MOTOR1_STEP_PIN, mode=machine.Pin.OUT)
+dir1 = machine.Pin(MOTOR1_DIR_PIN, mode=machine.Pin.OUT)
+motor2 = machine.Pin(MOTOR2_STEP_PIN, mode=machine.Pin.OUT)
+dir2 = machine.Pin(MOTOR2_DIR_PIN, mode=machine.Pin.OUT)
+motor3 = machine.Pin(MOTOR3_STEP_PIN, mode=machine.Pin.OUT)
+dir3 = machine.Pin(MOTOR3_DIR_PIN, mode=machine.Pin.OUT)
+motor4 = machine.Pin(MOTOR4_STEP_PIN, mode=machine.Pin.OUT)
+dir4 = machine.Pin(MOTOR4_DIR_PIN, mode=machine.Pin.OUT)
 
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
+# Configuração dos timers para controlar os motores de passo
+timer1 = Timer(0)
+timer2 = Timer(1)
+timer3 = Timer(2)
+timer4 = Timer(3)
 
-  #Conectar ao Wi-Fi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Conectando ao Wi-Fi...");
-  }
+# Variáveis para armazenar as coordenadas
+coord1 = 0
+coord2 = 0
+coord3 = 0
+coord4 = 0
 
-  Serial.println("Conectado ao Wi-Fi!");
-  Serial.print("Endereço IP: ");
-  Serial.println(WiFi.localIP());
+# Função de callback para processar as mensagens MQTT recebidas
+def mqtt_callback(topic, msg):
+    global coord1, coord2, coord3, coord4
+    data = loads(msg)
+    coord1 = data['motor1']
+    coord2 = data['motor2']
+    coord3 = data['motor3']
+    coord4 = data['motor4']
 
-  #Configurar roteamento da Web
-  server.on("/", handleRoot);
-  server.onNotFound(handleNotFound);
-  server.begin();
+# Configuração do cliente MQTT
+mqtt_client = MQTTClient("ESP32", MQTT_SERVER, port=MQTT_PORT)
+mqtt_client.set_callback(mqtt_callback)
+mqtt_client.connect()
+mqtt_client.subscribe(MQTT_TOPIC)
 
-  #Configurar motores de passo
-  motor1.setMaxSpeed(1000);
-  motor1.setAcceleration(100);
-  motor2.setMaxSpeed(1000);
-  motor2.setAcceleration(100);
-  motor3.setMaxSpeed(1000);
-  motor3.setAcceleration(100);
-  motor4.setMaxSpeed(1000);
-  motor4.setAcceleration(100);
-}
+# Função para mover o motor de passo para uma coordenada específica
+def move_motor(timer, step_pin, dir_pin, coord):
+    if coord != 0:
+        dir_pin.value(1 if coord > 0 else 0)
+        for _ in range(abs(coord)):
+            step_pin.value(1)
+            machine.delay(1)
+            step_pin.value(0)
+            machine.delay(1)
 
-void loop() {
-  server.handleClient();
+# Função para atualizar os motores de passo
+def update_motors(timer):
+    move_motor(timer1, motor1, dir1, coord1)
+    move_motor(timer2, motor2, dir2, coord2)
+    move_motor(timer3, motor3, dir3, coord3)
+    move_motor(timer4, motor4, dir4, coord4)
 
-  #Verificar se há novas coordenadas a cada 5 minutos
-  if (millis() % (5 * 60 * 1000) == 0) {
-    """Obter as coordenadas do usuário externo
-    (implementar código para obtenção das coordenadas externas)"""
-    float coord1 = getCoordinate(1);
-    float coord2 = getCoordinate(2);
-    float coord3 = getCoordinate(3);
-    float coord4 = getCoordinate(4);
+# Configuração dos timers para atualizar os motores a cada 5 minutos
+timer1.init(period=5*60*1000, mode=Timer.PERIODIC, callback=update_motors)
+timer2.init(period=5*60*1000, mode=Timer.PERIODIC, callback=update_motors)
+timer3.init(period=5*60*1000, mode=Timer.PERIODIC, callback=update_motors)
+timer4.init(period=5*60*1000, mode=Timer.PERIODIC, callback=update_motors)
 
-    #Mover os motores para as coordenadas fornecidas
-    motor1.moveTo(coord1);
-    motor2.moveTo(coord2);
-    motor3.moveTo(coord3);
-    motor4.moveTo(coord4);
-  }
-
-  #Atualizar os motores
-  motor1.run();
-  motor2.run();
-  motor3.run();
-  motor4.run();
-}
-
-void handleRoot() {
-  String message = "ESP32 está funcionando!";
-  server.send(200, "text/plain", message);
-}
-
-void handleNotFound() {
-  String message = "Página não encontrada";
-  server.send(404, "text/plain", message);
-}
-
-float getCoordinate(int motorIndex) {
-  """Implementar a lógica para obter as coordenadas
-  do usuário externo para cada motor. Provavelmente será por meio de uma
-  comunicação serial ou conexão com banco de dados via internet.
-  A tendência é de que utilizemos a conexão com BD via internet
-  aproveitando os scripts calcula_posSol.py e o pos_insereData.py"""
-  switch (motorIndex) {
-    case 1:
-      return 1000.0;
-    case 2:
-      return 2000.0;
-    case 3:
-      return 3000.0;
-    case 4:
-      return 4000.0;
-    default:
-      return 0.0;
-  }
-}
-
-"""A biblioteca AccelStepper é uma biblioteca muito útil para controlar motores de passo 
-com Arduino e plataformas compatíveis, como o ESP32. 
-Ela fornece uma maneira conveniente de controlar a velocidade e a aceleração dos 
-motores de passo, permitindo movimentos suaves e precisos.
-A biblioteca AccelStepper oferece diferentes modos de operação para controlar os 
-motores de passo, como "passo total" (full step), "meio passo" (half step) e 
-"passo de micro" (microstepping). Ela também suporta aceleração e desaceleração suave 
-dos motores, o que é importante para evitar chocar os motores em altas 
-velocidades e obter um movimento mais preciso."""
-
-#Alguns conceitos importantes e funções-chave da biblioteca AccelStepper:
-
-"""Passos e velocidade: A biblioteca trabalha com base em passos. 
-Cada motor de passo tem uma certa resolução, o que significa que ele se move em 
-incrementos discretos. Por exemplo, se um motor de passo tem uma resolução de 200 passos por 
-rotação completa, ele se moverá 1/200 de volta em cada passo. 
-A velocidade é especificada em passos por segundo ou passos por minuto."""
-
-"""Aceleração: A biblioteca permite definir uma aceleração, ou seja, a taxa de mudança da 
-velocidade. Isso permite que o motor de passo atinja a velocidade desejada gradualmente, 
-evitando chocá-lo com aceleração instantânea. A aceleração é especificada em passos por 
-segundo ao quadrado ou passos por minuto ao quadrado."""
-
-"""Métodos principais: A AccelStepper oferece métodos principais para controlar os motores 
-de passo, como moveTo(), move(), run(), setSpeed(), setMaxSpeed(), setAcceleration(), 
-isRunning(), entre outros. Esses métodos são usados para definir a posição de destino, 
-mover o motor, atualizar o movimento e configurar a velocidade e aceleração."""
-
-"""Modos de operação: A biblioteca AccelStepper suporta diferentes modos de operação, 
-como "passo total" (onde o motor é controlado por sinais de pulso e direção), 
-"meio passo" (onde o motor pode se mover em incrementos menores do que um passo completo) 
-e "passo de micro" (que permite ainda mais microstepping, proporcionando movimentos mais suaves)."""
-
-"""Esses são apenas alguns conceitos e funcionalidades básicas da biblioteca AccelStepper. 
-Ela oferece muitas outras opções de configuração e controle avançado de motores de passo. 
-Se você precisar de informações mais detalhadas sobre a biblioteca, 
-sugiro consultar a documentação oficial da AccelStepper."""
+# Loop principal para processar as mensagens MQTT
+while True:
+    mqtt_client.wait_msg()
